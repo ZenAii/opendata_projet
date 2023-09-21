@@ -103,13 +103,13 @@ void histogramme_CO2(const string &filename, const string &title, const vector<s
 
     gdImageFill(im, 0, 0, white);
 
-    int titleX = image_width / 2 - 200; // Position horizontale centrée pour les titres
+    int titleX = (image_width - gdFontGetLarge()->w * title.length()) / 2; // Centrer le titre horizontalement
 
-    gdImageString(im, gdFontGetLarge(), titleX, 50, (unsigned char *)title.c_str(), textColor);
+    gdImageString(im, gdFontGetLarge(), titleX, 50, (unsigned char *)title.c_str(), textColor); // Position centrale en haut
     gdImageStringUp(im, gdFontGetSmall(), 20, startY - 350, (unsigned char *)"CO2 rate (g/kWh)", textColor);
 
-    // Dessiner l'axe des X
-    gdImageLine(im, startX, startY, startX + totalBarWidth, startY, black);
+    // Dessiner l'axe des X jusqu'au bord droit de l'image
+    gdImageLine(im, startX, startY, image_width - 100, startY, black); // Ajustez la position finale du trait des X
 
     // Dessiner l'axe des Y
     gdImageLine(im, startX, startY, startX, startY - 500, black); // Ajustez la hauteur de l'axe Y
