@@ -83,12 +83,12 @@ void getJson()
     }
 }
 
-void histogramme_CO2(const string &filename, const string &title, const vector<string> &years, const vector<double> &rates, double minCO2, double maxCO2)
+void histogramme_CO2(const string &filename, const string &title, const vector<string> &years, const vector<double> &rates)
 {
-    const int image_width = 1200; // Largeur de l'image
+    const int image_width = 1000; // Largeur de l'image
     const int image_height = 800; // Hauteur de l'image
 
-    int barWidth = 30;   // Largeur de chaque barre
+    int barWidth = 20;   // Largeur de chaque barre
     int barSpacing = 40; // Espace entre les barres
 
     // Calculer la largeur totale des barres et l'espacement total entre elles
@@ -101,25 +101,12 @@ void histogramme_CO2(const string &filename, const string &title, const vector<s
     int black = gdImageColorAllocate(im, 0, 0, 0);
     int textColor = gdImageColorAllocate(im, 0, 0, 0);
 
-    // Définir des couleurs pour les barres (vous pouvez en ajouter plus si nécessaire)
-    int colors[] = {
-        gdImageColorAllocate(im, 255, 0, 0),   // Rouge
-        gdImageColorAllocate(im, 0, 255, 0),   // Vert
-        gdImageColorAllocate(im, 0, 0, 255),   // Bleu
-        gdImageColorAllocate(im, 255, 255, 0), // Jaune
-        gdImageColorAllocate(im, 255, 0, 255)  // Magenta
-    };
-
     gdImageFill(im, 0, 0, white);
 
     int titleX = image_width / 2 - 200; // Position horizontale centrée pour les titres
 
     gdImageString(im, gdFontGetLarge(), titleX, 50, (unsigned char *)title.c_str(), textColor);
     gdImageStringUp(im, gdFontGetSmall(), 20, startY - 350, (unsigned char *)"CO2 rate (g/kWh)", textColor);
-
-    // Utilisez minCO2 et maxCO2 pour définir les limites de l'axe Y
-    gdImageString(im, gdFontGetSmall(), startX - 40, startY - 400, (unsigned char *)to_string(minCO2).c_str(), textColor);
-    gdImageString(im, gdFontGetSmall(), startX - 40, startY, (unsigned char *)to_string(maxCO2).c_str(), textColor);
 
     // Dessiner l'axe des X
     gdImageLine(im, startX, startY, startX + totalBarWidth, startY, black);
@@ -128,32 +115,35 @@ void histogramme_CO2(const string &filename, const string &title, const vector<s
     gdImageLine(im, startX, startY, startX, startY - 400, black);
 
     // Ajouter des étiquettes numériques sur l'axe Y avec des chiffres ronds
-    int numLabels = 5;                                                                  // Nombre d'étiquettes numériques
-    int labelIncrement = 5;                                                             // Incrémentation des étiquettes
-    int startYValue = static_cast<int>(ceil(minCO2 / labelIncrement) * labelIncrement); // Valeur de départ
+    int numLabels = 5;       // Nombre d'étiquettes numériques
+    int labelIncrement = 20; // Incrémentation des étiquettes
+    int startYValue = 0;     // Valeur de départ
 
     for (int i = 0; i <= numLabels; i++)
     {
         int labelValue = startYValue + i * labelIncrement;
-        int labelY = startY - static_cast<int>((labelValue - minCO2) / (maxCO2 - minCO2) * 400);
+        int labelY = startY - static_cast<int>((labelValue - 0) / 100.0 * 400);
 
         // Afficher la valeur de l'étiquette
         stringstream labelStream;
-        labelStream << labelValue;
+        labelStream << labelValue << "%";
 
         gdImageString(im, gdFontGetSmall(), startX - 40, labelY, (unsigned char *)labelStream.str().c_str(), textColor);
     }
 
     for (int i = 0; i < years.size(); i++)
     {
-        int barHeight = static_cast<int>((rates[i] - minCO2) / (maxCO2 - minCO2) * 400); // Ajustez l'échelle de la hauteur
+        // Normalisez la valeur CO2 pour qu'elle se situe entre 0% et 100%
+        double normalizedRate = (rates[i] <= 100.0) ? rates[i] : 100.0;
+
+        int barHeight = static_cast<int>((normalizedRate / 100.0) * 400); // Ajustez l'échelle de la hauteur
         int x1 = startX + (barWidth + barSpacing) * i;
         int y1 = startY - barHeight;
         int x2 = x1 + barWidth;
         int y2 = startY;
 
         // Utiliser différentes couleurs pour chaque barre
-        int color = colors[i % (sizeof(colors) / sizeof(colors[0]))];
+        int color = gdImageColorAllocate(im, 0, 0, 255); // Couleur bleue pour les barres du total des années
         gdImageFilledRectangle(im, x1, y1, x2, y2, color);
 
         // Calculer la position horizontale centrée pour le titre de chaque barre
@@ -240,7 +230,7 @@ int main()
         string filename = "graphique/emissionCO2_" + subsector + ".png";
 
         // Générer le graphique pour ce sous-secteur
-        histogramme_CO2(filename, subsector, yearsForSubsector, ratesForSubsector, minCO2, maxCO2);
+        histogramme_CO2(filename, subsector, yearsForSubsector, ratesForSubsector);
         cout << "Graph for subsector " << subsector << " generated: " << filename << endl;
     }
 
@@ -270,8 +260,8 @@ int main()
         // Spécifier le chemin complet du fichier de sortie dans le dossier "graphique"
         string filename = "graphique/emissionCO2_" + year + ".png";
 
-        // Générer le graphique pour cette année avec la somme totale des émissions de CO2, en utilisant minCO2 et maxCO2
-        histogramme_CO2(filename, year, vector<string>{year}, vector<double>{totalCO2ForYear}, minCO2, maxCO2);
+        // Générer le graphique pour cette année avec la somme totale des émissions de CO2
+        histogramme_CO2(filename, year, vector<string>{year}, vector<double>{totalCO2ForYear});
         cout << "Graph for year " << year << " generated: " << filename << endl;
     }
 
