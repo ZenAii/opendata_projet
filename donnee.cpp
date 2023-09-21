@@ -112,7 +112,7 @@ void histogramme_CO2(const string &filename, const string &title, const vector<s
     gdImageLine(im, startX, startY, startX + totalBarWidth, startY, black);
 
     // Dessiner l'axe des Y
-    gdImageLine(im, startX, startY, startX, startY - 400, black);
+    gdImageLine(im, startX, startY, startX, startY - 500, black); // Ajustez la hauteur de l'axe Y
 
     // Ajouter des étiquettes numériques sur l'axe Y avec des chiffres ronds
     int numLabels = 5;       // Nombre d'étiquettes numériques
@@ -122,7 +122,7 @@ void histogramme_CO2(const string &filename, const string &title, const vector<s
     for (int i = 0; i <= numLabels; i++)
     {
         int labelValue = startYValue + i * labelIncrement;
-        int labelY = startY - static_cast<int>((labelValue - 0) / 100.0 * 400);
+        int labelY = startY - static_cast<int>((labelValue - 0) / 100.0 * 500); // Ajustez la hauteur de l'axe Y
 
         // Afficher la valeur de l'étiquette
         stringstream labelStream;
@@ -136,7 +136,10 @@ void histogramme_CO2(const string &filename, const string &title, const vector<s
         // Normalisez la valeur CO2 pour qu'elle se situe entre 0% et 100%
         double normalizedRate = (rates[i] <= 100.0) ? rates[i] : 100.0;
 
-        int barHeight = static_cast<int>((normalizedRate / 100.0) * 400); // Ajustez l'échelle de la hauteur
+        // Ajustez la hauteur des barres pour le zoom
+        int barHeight = static_cast<int>((normalizedRate / 100.0) * 500); // Ajustez l'échelle de la hauteur
+
+        // Ajustez la position des barres pour le zoom
         int x1 = startX + (barWidth + barSpacing) * i;
         int y1 = startY - barHeight;
         int x2 = x1 + barWidth;
