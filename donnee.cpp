@@ -14,6 +14,9 @@
 #include <limits>
 #include <iomanip>
 #include <map>
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
 
 using namespace std;
 using json = nlohmann::json;
@@ -91,18 +94,39 @@ void getJson()
     }
 }
 
+void useArialFont(gdImagePtr im)
+{
+    FT_Library library;
+    FT_Face face;
+
+    if (FT_Init_FreeType(&library) != 0)
+    {
+        cerr << "Error: Failed to initialize FreeType library." << endl;
+        return;
+    }
+
+    if (FT_New_Face(library, "Arial.ttf", 0, &face) != 0)
+    {
+        cerr << "Error: Failed to load the Arial.ttf font." << endl;
+        FT_Done_FreeType(library);
+        return;
+    }
+
+    gdFTUseFontConfig(1);
+
+    FT_Done_Face(face);
+    FT_Done_FreeType(library);
+}
+
 void histogramme_CO2(const string &filename, const string &title, const vector<string> &years, const vector<double> &rates)
 {
-    const int image_width = 1000; // Largeur de l'image
-    const int image_height = 800; // Hauteur de l'image
-
-    int barWidth = 20;   // Largeur de chaque barre
-    int barSpacing = 40; // Espace entre les barres
-
-    // Calculer la largeur totale des barres et l'espacement total entre elles
+    const int image_width = 1200; // Augmentez la largeur de l'image
+    const int image_height = 800;
+    int barWidth = 40;   // Augmentez la largeur de chaque barre
+    int barSpacing = 60; // Augmentez l'espacement entre les barres
     int totalBarWidth = (barWidth + barSpacing) * years.size() - barSpacing;
-    int startX = 100;                // Position de départ pour les barres
-    int startY = image_height - 100; // Position de départ pour les barres
+    int startX = 100;
+    int startY = image_height - 100;
 
     gdImagePtr im = gdImageCreateTrueColor(image_width, image_height);
     int white = gdImageColorAllocate(im, 255, 255, 255);
@@ -111,68 +135,53 @@ void histogramme_CO2(const string &filename, const string &title, const vector<s
 
     gdImageFill(im, 0, 0, white);
 
-    int titleX = (image_width - gdFontGetLarge()->w * title.length()) / 2; // Centrer le titre horizontalement
-
-    gdImageString(im, gdFontGetLarge(), titleX, 50, (unsigned char *)title.c_str(), textColor); // Position centrale en haut
+    int titleX = (image_width - gdFontGetLarge()->w * title.length()) / 2;
+    gdImageString(im, gdFontGetLarge(), titleX, 50, (unsigned char *)title.c_str(), textColor);
     gdImageStringUp(im, gdFontGetSmall(), 20, startY - 350, (unsigned char *)"CO2 rate (g/kWh)", textColor);
 
-    // Dessiner l'axe des X jusqu'au bord droit de l'image
-    gdImageLine(im, startX, startY, image_width - 100, startY, black); // Ajustez la position finale du trait des X
+    gdImageLine(im, startX, startY, image_width - 100, startY, black);
+    gdImageLine(im, startX, startY, startX, startY - 500, black);
 
-    // Dessiner l'axe des Y
-    gdImageLine(im, startX, startY, startX, startY - 500, black); // Ajustez la hauteur de l'axe Y
-
-    // Ajouter des étiquettes numériques sur l'axe Y avec des chiffres ronds
-    int numLabels = 5;       // Nombre d'étiquettes numériques
-    int labelIncrement = 20; // Incrémentation des étiquettes
-    int startYValue = 0;     // Valeur de départ
+    int numLabels = 5;
+    int labelIncrement = 20;
+    int startYValue = 0;
 
     for (int i = 0; i <= numLabels; i++)
     {
         int labelValue = startYValue + i * labelIncrement;
-        int labelY = startY - static_cast<int>((labelValue - 0) / 100.0 * 500); // Ajustez la hauteur de l'axe Y
+        int labelY = startY - static_cast<int>((labelValue - 0) / 100.0 * 500);
 
-        // Afficher la valeur de l'étiquette
         stringstream labelStream;
         labelStream << labelValue << "%";
 
         gdImageString(im, gdFontGetSmall(), startX - 40, labelY, (unsigned char *)labelStream.str().c_str(), textColor);
     }
 
-    // Variables pour gérer l'alternance des lignes pour les titres des X
+    useArialFont(im);
+
     int titleY1 = startY + 20;
-    int titleY2 = titleY1 + 15; // Décalage vertical pour la deuxième ligne
+    int titleY2 = titleY1 + 15;
     bool useTitleY1 = true;
 
     for (int i = 0; i < years.size(); i++)
     {
-        // Normalisez la valeur CO2 pour qu'elle se situe entre 0% et 100%
         double normalizedRate = (rates[i] <= 100.0) ? rates[i] : 100.0;
-
-        // Ajustez la hauteur des barres pour le zoom
-        int barHeight = static_cast<int>((normalizedRate / 100.0) * 500); // Ajustez l'échelle de la hauteur
-
-        // Ajustez la position des barres pour le zoom
+        int barHeight = static_cast<int>((normalizedRate / 100.0) * 500);
         int x1 = startX + (barWidth + barSpacing) * i;
         int y1 = startY - barHeight;
         int x2 = x1 + barWidth;
         int y2 = startY;
 
-        // Utiliser différentes couleurs pour chaque barre
-        int color = gdImageColorAllocate(im, 0, 0, 255); // Couleur bleue pour les barres du total des années
+        int color = gdImageColorAllocate(im, 0, 0, 255);
         gdImageFilledRectangle(im, x1, y1, x2, y2, color);
 
-        // Calculer la position horizontale centrée pour le titre de chaque barre
         int titleX = x1 + barWidth / 2 - gdFontGetSmall()->w / 2;
-
-        // Sélectionner la ligne à utiliser pour le titre
         int titleY = useTitleY1 ? titleY1 : titleY2;
         useTitleY1 = !useTitleY1;
 
         gdImageString(im, gdFontGetSmall(), titleX, titleY, (unsigned char *)years[i].c_str(), textColor);
     }
 
-    // Enregistrement de l'image dans le dossier "graphique"
     FILE *out = fopen(filename.c_str(), "wb");
     gdImagePng(im, out);
     fclose(out);
