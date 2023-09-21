@@ -13,6 +13,7 @@
 #include <filesystem>
 #include <limits>
 #include <iomanip>
+#include <map>
 
 using namespace std;
 using json = nlohmann::json;
@@ -27,6 +28,13 @@ struct DataPoint
     string year;
     string subsector;
     double rate;
+};
+
+// Structure pour stocker les données par année et sous-secteur
+struct YearData
+{
+    vector<string> subsectors;
+    vector<double> rates;
 };
 
 // Fonction de comparaison pour trier les données par année
@@ -131,6 +139,11 @@ void histogramme_CO2(const string &filename, const string &title, const vector<s
         gdImageString(im, gdFontGetSmall(), startX - 40, labelY, (unsigned char *)labelStream.str().c_str(), textColor);
     }
 
+    // Variables pour gérer l'alternance des lignes pour les titres des X
+    int titleY1 = startY + 20;
+    int titleY2 = titleY1 + 15; // Décalage vertical pour la deuxième ligne
+    bool useTitleY1 = true;
+
     for (int i = 0; i < years.size(); i++)
     {
         // Normalisez la valeur CO2 pour qu'elle se situe entre 0% et 100%
@@ -151,7 +164,12 @@ void histogramme_CO2(const string &filename, const string &title, const vector<s
 
         // Calculer la position horizontale centrée pour le titre de chaque barre
         int titleX = x1 + barWidth / 2 - gdFontGetSmall()->w / 2;
-        gdImageString(im, gdFontGetSmall(), titleX, startY + 20, (unsigned char *)years[i].c_str(), textColor);
+
+        // Sélectionner la ligne à utiliser pour le titre
+        int titleY = useTitleY1 ? titleY1 : titleY2;
+        useTitleY1 = !useTitleY1;
+
+        gdImageString(im, gdFontGetSmall(), titleX, titleY, (unsigned char *)years[i].c_str(), textColor);
     }
 
     // Enregistrement de l'image dans le dossier "graphique"
@@ -203,68 +221,28 @@ int main()
         }
     }
 
-    // Obtenir la liste des sous-secteurs uniques
-    vector<string> uniqueSubsectors;
+    // Structure pour stocker les données par année et sous-secteur
+    std::map<string, YearData> yearDataMap;
+
+    // Remplacez la boucle de filtrage des données actuelle
     for (const DataPoint &dataPoint : dataPoints)
     {
-        if (std::find(uniqueSubsectors.begin(), uniqueSubsectors.end(), dataPoint.subsector) == uniqueSubsectors.end())
-        {
-            uniqueSubsectors.push_back(dataPoint.subsector);
-        }
+        // Regroupez les données par année et sous-secteur
+        yearDataMap[dataPoint.year].subsectors.push_back(dataPoint.subsector);
+        yearDataMap[dataPoint.year].rates.push_back(dataPoint.rate);
     }
 
-    // Générer un graphique pour chaque sous-secteur unique
-    for (const string &subsector : uniqueSubsectors)
+    // Générez un histogramme pour chaque année
+    for (const auto &yearDataPair : yearDataMap)
     {
-        vector<double> ratesForSubsector;
-        vector<string> yearsForSubsector;
+        const string &year = yearDataPair.first;
+        const YearData &yearData = yearDataPair.second;
 
-        // Filtrer les données pour le sous-secteur spécifique
-        for (const DataPoint &dataPoint : dataPoints)
-        {
-            if (dataPoint.subsector == subsector)
-            {
-                ratesForSubsector.push_back(dataPoint.rate);
-                yearsForSubsector.push_back(dataPoint.year);
-            }
-        }
-
-        // Spécifier le chemin complet du fichier de sortie dans le dossier "graphique"
-        string filename = "graphique/emissionCO2_" + subsector + ".png";
-
-        // Générer le graphique pour ce sous-secteur
-        histogramme_CO2(filename, subsector, yearsForSubsector, ratesForSubsector);
-        cout << "Graph for subsector " << subsector << " generated: " << filename << endl;
-    }
-
-    // Générer un graphique pour chaque année avec la somme totale des émissions de CO2
-    vector<string> uniqueYears;
-    for (const DataPoint &dataPoint : dataPoints)
-    {
-        if (std::find(uniqueYears.begin(), uniqueYears.end(), dataPoint.year) == uniqueYears.end())
-        {
-            uniqueYears.push_back(dataPoint.year);
-        }
-    }
-
-    for (const string &year : uniqueYears)
-    {
-        double totalCO2ForYear = 0.0;
-
-        // Filtrer les données pour l'année spécifique
-        for (const DataPoint &dataPoint : dataPoints)
-        {
-            if (dataPoint.year == year)
-            {
-                totalCO2ForYear += dataPoint.rate;
-            }
-        }
-
-        // Spécifier le chemin complet du fichier de sortie dans le dossier "graphique"
+        // Spécifiez le chemin complet du fichier de sortie dans le dossier "graphique"
         string filename = "graphique/emissionCO2_" + year + ".png";
 
-        // Générer le graphique pour cette année avec la somme totale des émissions de CO2
-        histogramme_CO2(filename, year, vector<string>{year}, vector<double>{totalCO2ForYear});
+        // Générez le graphique pour cette année avec tous les sous-secteurs
+        histogramme_CO2(filename, year, yearData.subsectors, yearData.rates);
         cout << "Graph for year " << year << " generated: " << filename << endl;
     }
 
