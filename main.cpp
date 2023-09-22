@@ -15,6 +15,7 @@
 #include <iomanip>
 #include <map>
 #include <ft2build.h>
+#include <filesystem>
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
 
@@ -207,6 +208,15 @@ void histogramme_CO2(const string &filename, const string &title, const vector<s
 
 int main()
 {
+    if (!fs::is_directory("graphique"))
+    {
+        if (!fs::create_directory("graphique"))
+        {
+            cerr << "Error: Failed to create the 'graphique' directory." << endl;
+            return 1; // Quittez le programme avec un code d'erreur
+        }
+    }
+
     getJson();
     cout << "Download complete " << json_filename << " has been retrieved." << endl;
     ifstream file(json_filename);
