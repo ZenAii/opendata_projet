@@ -105,14 +105,23 @@ void useArialFont(gdImagePtr im)
         return;
     }
 
-    if (FT_New_Face(library, "Arial.ttf", 0, &face) != 0)
+    // Chemin complet de la police Arial
+    string fontPath = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"; // Changez le chemin vers la police Arial sur votre système
+
+    if (FT_New_Face(library, fontPath.c_str(), 0, &face) != 0)
     {
-        cerr << "Error: Failed to load the Arial.ttf font." << endl;
+        cerr << "Error: Failed to load the Arial font." << endl;
         FT_Done_FreeType(library);
         return;
     }
 
     gdFTUseFontConfig(1);
+
+    // Définir la couleur du texte
+    int textColor = gdImageColorAllocate(im, 0, 0, 0);
+
+    // L'utilisation de la police Arial est correcte
+    gdImageStringTTF(im, nullptr, textColor, fontPath.c_str(), 12.0, 0.0, 10, 10, "Arial Font Test");
 
     FT_Done_Face(face);
     FT_Done_FreeType(library);
@@ -183,8 +192,15 @@ void histogramme_CO2(const string &filename, const string &title, const vector<s
     }
 
     FILE *out = fopen(filename.c_str(), "wb");
-    gdImagePng(im, out);
-    fclose(out);
+    if (out != nullptr)
+    {
+        gdImagePng(im, out);
+        fclose(out);
+    }
+    else
+    {
+        cerr << "Error: Failed to open output file for writing." << endl;
+    }
 
     gdImageDestroy(im);
 }
