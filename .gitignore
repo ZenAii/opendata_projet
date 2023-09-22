@@ -1,2 +1,6 @@
+# Ignorer le dossier "graphique"
 graphique/
+
+# Ignorer l'exécutable "prog"
 prog
+
