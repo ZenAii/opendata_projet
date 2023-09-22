@@ -95,7 +95,7 @@ void getJson()
     }
 }
 
-void useArialFont(gdImagePtr im)
+void useDejaVuSansFont(gdImagePtr im)
 {
     FT_Library library;
     FT_Face face;
@@ -106,12 +106,12 @@ void useArialFont(gdImagePtr im)
         return;
     }
 
-    // Chemin complet de la police Arial
-    string fontPath = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"; // Changez le chemin vers la police Arial sur votre système
+    // Chemin complet de la police DejaVuSans
+    string fontPath = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"; // Changez le chemin vers la police DejaVuSans sur votre système
 
     if (FT_New_Face(library, fontPath.c_str(), 0, &face) != 0)
     {
-        cerr << "Error: Failed to load the Arial font." << endl;
+        cerr << "Error: Failed to load the DejaVuSans font." << endl;
         FT_Done_FreeType(library);
         return;
     }
@@ -121,8 +121,8 @@ void useArialFont(gdImagePtr im)
     // Définir la couleur du texte
     int textColor = gdImageColorAllocate(im, 0, 0, 0);
 
-    // L'utilisation de la police Arial est correcte
-    gdImageStringTTF(im, nullptr, textColor, fontPath.c_str(), 12.0, 0.0, 10, 10, "Arial Font Test");
+    // L'utilisation de la police DejaVuSans est correcte
+    gdImageStringTTF(im, nullptr, textColor, fontPath.c_str(), 12.0, 0.0, 10, 10, "DejaVuSans Font Test");
 
     FT_Done_Face(face);
     FT_Done_FreeType(library);
@@ -167,7 +167,7 @@ void histogramme_CO2(const string &filename, const string &title, const vector<s
         gdImageString(im, gdFontGetSmall(), startX - 40, labelY, (unsigned char *)labelStream.str().c_str(), textColor);
     }
 
-    useArialFont(im);
+    useDejaVuSansFont(im);
 
     int titleY1 = startY + 20;
     int titleY2 = titleY1 + 15;
