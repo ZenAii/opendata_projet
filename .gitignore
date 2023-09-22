@@ -4,3 +4,5 @@ graphique/
 # Ignorer l'exécutable "prog"
 prog
 
+#Ignore le dossier ".vscode"
+.vscode/
