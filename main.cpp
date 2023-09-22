@@ -162,7 +162,7 @@ void histogramme_CO2(const string &filename, const string &title, const vector<s
         int labelY = startY - static_cast<int>((labelValue - 0) / 100.0 * 500);
 
         stringstream labelStream;
-        labelStream << labelValue << "%";
+        labelStream << labelValue << "";
 
         gdImageString(im, gdFontGetSmall(), startX - 40, labelY, (unsigned char *)labelStream.str().c_str(), textColor);
     }
@@ -190,6 +190,13 @@ void histogramme_CO2(const string &filename, const string &title, const vector<s
         useTitleY1 = !useTitleY1;
 
         gdImageString(im, gdFontGetSmall(), titleX, titleY, (unsigned char *)years[i].c_str(), textColor);
+
+        // Afficher la valeur au-dessus de la barre
+        int valueX = x1 + barWidth / 2 - gdFontGetSmall()->w / 2;
+        int valueY = y1 - 10; // Ajustez cette valeur pour le placement vertical
+        stringstream valueStream;
+        valueStream << fixed << setprecision(2) << rates[i]; // Formatage de la valeur
+        gdImageString(im, gdFontGetSmall(), valueX, valueY, (unsigned char *)valueStream.str().c_str(), textColor);
     }
 
     FILE *out = fopen(filename.c_str(), "wb");
