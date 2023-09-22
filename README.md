@@ -22,20 +22,20 @@ L'objectif de ce projet est de visualiser les émissions de CO2 territoriales pa
 Ce programme utilise plusieurs bibliothèques externes, dont voici la liste :
 
 - [gd](https://libgd.github.io/): Bibliothèque pour la manipulation d'images. Vous pouvez l'installer avec la commande suivante sur Debian/Ubuntu :
-
+```
 sudo apt-get install libgd-dev
-
+```
 
 - [FreeType](https://www.freetype.org/): Bibliothèque pour la gestion de polices. Vous pouvez l'installer avec la commande suivante sur Debian/Ubuntu :
-
+```
 sudo apt-get install libfreetype6-dev
-
+```
 - [nlohmann/json](https://github.com/nlohmann/json): Bibliothèque JSON en C++. Vous pouvez l'installer à l'aide de gestionnaires de dépendances comme [vcpkg](https://github.com/microsoft/vcpkg) ou [conan](https://conan.io/).
 
 - [libcurl](https://curl.se/libcurl/): Bibliothèque pour effectuer des requêtes HTTP. Vous pouvez l'installer avec la commande suivante sur Debian/Ubuntu :
-
+```
 sudo apt-get install libcurl4-openssl-dev
-
+```
 
 
 ## Compilation du programme sur Debian/Ubuntu
